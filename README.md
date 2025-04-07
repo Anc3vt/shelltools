@@ -200,3 +200,9 @@ Contributions welcome\!
 
 Add new tools to common/, new functions to functions, libraries to lib/.
 
+----
+
+Contact me: 
+
+- E-mail: [me@ancevt.com](mailto:me@ancevt.com)
+- Telegram: [@the148th](https://t.me/the148th)

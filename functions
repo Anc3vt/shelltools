@@ -79,7 +79,7 @@ complete -F _setv_complete_vars setv
 ###########
 
 cd() {
-    builtin cd "$@" || exit
+    builtin cd "$@" || return
 
     if [[ "$OLDPWD" != "$PWD" ]]; then
       echo "$PWD" >> "$ST_USER_HOME/cd_history"
