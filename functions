@@ -1,0 +1,145 @@
+#!/bin/bash
+
+setv() {
+    VARS_FILE="$ST_USER_HOME/env"
+
+    if [[ $# -ne 1 || "$1" != *=* ]]; then
+        echo "Usage: setv VAR_NAME=VALUE"
+        return 1
+    fi
+
+    VAR_PAIR="$1"
+    VAR_NAME="${VAR_PAIR%%=*}"
+    VAR_VALUE="${VAR_PAIR#*=}"
+
+    touch "$VARS_FILE"
+    sed -i "/^export $VAR_NAME=/d" "$VARS_FILE"
+    echo "export $VAR_NAME=\"$VAR_VALUE\"" >> "$VARS_FILE"
+    export "$VAR_NAME=$VAR_VALUE"
+}
+
+getv() {
+    VARS_FILE="$ST_USER_HOME/env"
+    [ -f "$VARS_FILE" ] && . "$VARS_FILE"
+
+    if [[ $# -ne 1 ]]; then
+        cat "$VARS_FILE"
+        return 1
+    fi
+
+    echo "${!1}"
+}
+
+unsetv() {
+    VARS_FILE="$ST_USER_HOME/env"
+
+    if [[ $# -ne 1 ]]; then
+        echo "Usage: unsetv VAR_NAME"
+        return 1
+    fi
+
+    VAR_NAME="$1"
+    sed -i "/^export $VAR_NAME=/d" "$VARS_FILE"
+    unset "$VAR_NAME"
+}
+
+# Автодополнение переменных
+_st_env_complete_vars() {
+    local curr="${COMP_WORDS[COMP_CWORD]}"
+    local VARS_FILE="$ST_USER_HOME/env"
+    local vars=()
+
+    [ -f "$VARS_FILE" ] && vars=($(grep '^export ' "$VARS_FILE" | cut -d' ' -f2 | cut -d'=' -f1))
+
+    COMPREPLY=( $(compgen -W "${vars[*]}" -- "$curr") )
+}
+
+# Привязка автодополнения
+complete -F _st_env_complete_vars getv
+complete -F _st_env_complete_vars unsetv
+
+_setv_complete_vars() {
+    local curr="${COMP_WORDS[COMP_CWORD]}"
+    local VARS_FILE="$ST_USER_HOME/env"
+    local vars=()
+
+    [ -f "$VARS_FILE" ] && vars=($(grep '^export ' "$VARS_FILE" | cut -d' ' -f2 | cut -d'=' -f1))
+
+    # Только до = — если уже есть =, ничего не подставляем
+    if [[ "$curr" == *=* ]]; then
+        COMPREPLY=()
+    else
+        COMPREPLY=( $(compgen -W "${vars[*]/%/=}" -- "$curr") )
+        compopt -o nospace 2>/dev/null
+    fi
+}
+complete -F _setv_complete_vars setv
+
+
+###########
+
+cd() {
+    builtin cd "$@" || exit
+
+    if [[ "$OLDPWD" != "$PWD" ]]; then
+      echo "$PWD" >> "$ST_USER_HOME/cd_history"
+    fi
+}
+
+get_raw_history() {
+  tail "$ST_USER_HOME/cd_history" -n9 | head -n8
+}
+
+d() {
+  get_raw_history | tac | nl -v1 -nln -w1 -s' ' > $ST_USER_HOME/tmp_numbering
+  cat $ST_USER_HOME/tmp_numbering
+  rm -f $ST_USER_HOME/tmp_numbering
+}
+
+st_go() {
+  touch "$ST_USER_HOME/cd_history"
+
+  local index=$1
+  local dir
+  dir=$(get_raw_history | tac | sed -n "${index}p")
+  [[ -n "$dir" ]] && cd "$dir" || return
+}
+
+1() { st_go 1; }
+2() { st_go 2; }
+3() { st_go 3; }
+4() { st_go 4; }
+5() { st_go 5; }
+6() { st_go 6; }
+7() { st_go 7; }
+8() { st_go 8; }
+
+f() {
+  find ./ -iname "*$1*"
+}
+
+g() {
+  grep -rinI --color "$@"
+}
+
+fvim() {
+  find ./ -name "*$1*" -exec bash -c "grep -rinI '$2' >> /dev/null && vim {}" \;
+}
+
+mvnver() {
+  N=$1
+
+  [[ -z "$N" ]] && N=20
+
+  head pom.xml -n$N | grep --color -E "groupId|<version|artifactId"
+}
+
+mvnless() {
+  mvn clean install | grep -E --color "(SUCCESS|FAILURE|Building)"
+}
+
+fdate() {
+  date +"%Y-%m-%d_%H-%M-%S"
+}
+
+st_go 1

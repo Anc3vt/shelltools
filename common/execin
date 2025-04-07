@@ -1,0 +1,23 @@
+#!/bin/bash
+
+. functions
+
+# Проверка: передана ли команда
+if [ -z "$1" ]; then
+  echo "Usage: ls | $0 \"your-command-here\""
+  exit 1
+fi
+
+# Команда, которую нужно выполнить в каждой директории
+CMD="$1"
+
+# Чтение директорий из stdin
+while IFS= read -r dir; do
+  # Проверка, что это директория
+  if [ -d "$dir" ]; then
+    echo "> cd \"$dir\" && $CMD"
+    (cd "$dir" && eval "$CMD")
+  else
+    echo "Пропускаю '$dir' — не директория"
+  fi
+done
