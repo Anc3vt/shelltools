@@ -1,8 +1,8 @@
 #!/bin/bash
 
-. $ST_HOME/lib/args.sh
+source "$ST_HOME/functions"
 
-find . -not -path '*/\.*' | sort | awk '
+awk_script='
 {
   n = split($0, parts, "/")
   indent = ""
@@ -32,3 +32,9 @@ END {
   }
 }
 '
+
+if check_flag "all"; then
+  find . | sort | awk "$awk_script"
+else
+  find . -not -path '*/\.*' | sort | awk "$awk_script"
+fi

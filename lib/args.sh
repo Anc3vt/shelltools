@@ -1,16 +1,14 @@
 #!/bin/bash
 
-# Функция для проверки наличия флага
 check_flag() {
     local flag=$1
     if [[ " ${flags[@]} " =~ " ${flag} " ]]; then
-        return 0  # Флаг найден
+        return 0
     else
-        return 1  # Флаг не найден
+        return 1
     fi
 }
 
-# Функция для получения значения аргумента по флагу
 get_argument() {
     local flag=$1
     local value=""
@@ -23,7 +21,6 @@ get_argument() {
     echo "$value"
 }
 
-# Функция для парсинга аргументов
 parse_args() {
     args=()
     flags=()
@@ -48,5 +45,4 @@ parse_args() {
     done
 }
 
-# Подключение
 parse_args "$@"

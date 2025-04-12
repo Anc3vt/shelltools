@@ -43,7 +43,6 @@ unsetv() {
     unset "$VAR_NAME"
 }
 
-# Автодополнение переменных
 _st_env_complete_vars() {
     local curr="${COMP_WORDS[COMP_CWORD]}"
     local VARS_FILE="$ST_USER_HOME/env"
@@ -54,7 +53,6 @@ _st_env_complete_vars() {
     COMPREPLY=( $(compgen -W "${vars[*]}" -- "$curr") )
 }
 
-# Привязка автодополнения
 complete -F _st_env_complete_vars getv
 complete -F _st_env_complete_vars unsetv
 
@@ -65,7 +63,6 @@ _setv_complete_vars() {
 
     [ -f "$VARS_FILE" ] && vars=($(grep '^export ' "$VARS_FILE" | cut -d' ' -f2 | cut -d'=' -f1))
 
-    # Только до = — если уже есть =, ничего не подставляем
     if [[ "$curr" == *=* ]]; then
         COMPREPLY=()
     else

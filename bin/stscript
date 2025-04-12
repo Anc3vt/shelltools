@@ -1,7 +1,0 @@
-#!/bin/bash
-source $ST_HOME/functions
-source $ST_HOME/lib/args.sh
-
-echo 123
-
-getv
