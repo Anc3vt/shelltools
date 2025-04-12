@@ -28,5 +28,17 @@ sed -i '/### Shell tools initialization ###/,/##################################
 echo "" >> "$rc_file"
 echo "$init_lines" >> "$rc_file"
 
-echo "Shell tools initialization added to $rc_file"
+version=$(cat $ST_HOME/shelltools-version.txt)
 
+echo
+echo "
+ SSSSS   H   H  EEEEE  L      L     TTTTTTT  OOO   OOO  L      SSSSS
+ S       H   H  E      L      L        T    O   O O   O L      S
+ SSSSS   HHHHH  EEEE   L      L        T    O   O O   O L      SSSSS
+     S   H   H  E      L      L        T    O   O O   O L          S
+ SSSSS   H   H  EEEEE  LLLLL  LLLLL    T     OOO   OOO  LLLLL  SSSSS
+                                                                  $version
+"
+echo "ShellTools $version installed. Initialization lines added to $rc_file"
+echo "Please re-login to your shell for the changes to take effect."
+echo

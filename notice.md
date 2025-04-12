@@ -1,3 +1,3 @@
-Shell tools v1.0
+Shell Tools 
 
 Copyright (C) 2025 Ancevt (me@ancevt.com)
