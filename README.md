@@ -1,3 +1,4 @@
+ **this is the old version of README, new version in progress*
 # **ShellTools**
 
 ShellTools is a collection of handy shell scripts and functions designed to boost your command-line productivity. It includes utilities for persistent environment variables, directory navigation history, quick file search, and more. These tools are written in pure Bash and can be easily integrated into your daily shell workflow.

@@ -19,7 +19,6 @@ case "$shell_name" in
         rc_file="$HOME/.config/fish/config.fish"
         ;;
     *)
-        # Для других оболочек, например, Git Bash
         rc_file="$HOME/.bash_profile"
         ;;
 esac
