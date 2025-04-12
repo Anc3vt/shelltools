@@ -142,4 +142,4 @@ fdate() {
   date +"%Y-%m-%d_%H-%M-%S"
 }
 
-st_go 1
+. $ST_HOME/lib/args.sh

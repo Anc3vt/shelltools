@@ -1,0 +1,13 @@
+#!/bin/bash
+
+BRANCHES_NUM=${1:-5}
+COMMITS_NUM=${2:-5}
+
+branches=$(git branch -r | grep -v '\->' | head -n $BRANCHES_NUM)
+
+for branch in $branches; do
+    echo "branch: $branch"
+    git log "$branch" -n $COMMITS_NUM --oneline
+    echo "-------------------------"
+done
+

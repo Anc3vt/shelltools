@@ -1,0 +1,19 @@
+#!/bin/bash
+
+. $ST_HOME/functions
+
+if [ -z "$1" ]; then
+  echo "Usage: ls | $0 \"your-command-here\""
+  exit 1
+fi
+
+CMD="$1"
+
+while IFS= read -r dir; do
+  if [ -d "$dir" ]; then
+    echo "> cd \"$dir\" && $CMD"
+    (cd "$dir" && eval "$CMD")
+  else
+    echo "skip: '$dir' — not a directory"
+  fi
+done
