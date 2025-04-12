@@ -28,7 +28,7 @@ sed -i '/### Shell tools initialization ###/,/##################################
 echo "" >> "$rc_file"
 echo "$init_lines" >> "$rc_file"
 
-version=$(cat $ST_HOME/shelltools-version.txt)
+version=$(cat $ST_HOME/doc/shelltools-version.txt)
 
 echo
 echo "
