@@ -14,7 +14,7 @@ setv() {
 
     touch "$VARS_FILE"
     sed -i "/^export $VAR_NAME=/d" "$VARS_FILE"
-    echo "export $VAR_NAME=\"$VAR_VALUE\"" >> "$VARS_FILE"
+    echo "export $VAR_NAME='$VAR_VALUE'" >> "$VARS_FILE"
     export "$VAR_NAME=$VAR_VALUE"
 }
 
@@ -27,7 +27,7 @@ getv() {
         return 1
     fi
 
-    echo "${!1}"
+	 eval "echo \$$1"
 }
 
 unsetv() {
@@ -72,7 +72,6 @@ _setv_complete_vars() {
 }
 complete -F _setv_complete_vars setv
 
-
 ###########
 
 cd() {
@@ -111,8 +110,14 @@ st_go() {
 7() { st_go 7; }
 8() { st_go 8; }
 
+###########################
+
 f() {
   find ./ -iname "*$1*"
+}
+
+f1() {
+	f "*$1" | head -n1
 }
 
 g() {

@@ -7,12 +7,12 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-CMD="$1"
+cmd="$1"
 
 while IFS= read -r dir; do
   if [ -d "$dir" ]; then
-    echo "> cd \"$dir\" && $CMD"
-    (cd "$dir" && eval "$CMD")
+	 echo -e "\033[0;33m> $dir/> \033[0m\033[1;34m$cmd\033[0m"
+    (cd "$dir" && eval "$cmd")
   else
     echo "skip: '$dir' — not a directory"
   fi
