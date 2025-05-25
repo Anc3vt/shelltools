@@ -16,6 +16,9 @@ setv() {
     sed -i "/^export $VAR_NAME=/d" "$VARS_FILE"
     echo "export $VAR_NAME='$VAR_VALUE'" >> "$VARS_FILE"
     export "$VAR_NAME=$VAR_VALUE"
+
+	tmp=$(cat $VARS_FILE | sort)
+	echo $tmp > $VARS_FILE
 }
 
 getv() {
