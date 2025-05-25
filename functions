@@ -77,11 +77,32 @@ complete -F _setv_complete_vars setv
 
 ###########
 
+# Добавить текущую папку как метку
+mark() {
+  echo "$PWD" > "$ST_USER_HOME/bookmarks/$1"
+}
+
+# Перейти по метке
+jump() {
+  local target="$ST_USER_HOME/bookmarks/$1"
+  [[ -f "$target" ]] && cd "$(cat "$target")" || echo "Метки '$1' не найдено"
+}
+
+# Посмотреть все метки
+marks() {
+  ls "$ST_USER_HOME/bookmarks"
+}
+
 cd() {
     builtin cd "$@" || return
 
     if [[ "$OLDPWD" != "$PWD" ]]; then
-      echo "$PWD" >> "$ST_USER_HOME/cd_history"
+      f="$ST_USER_HOME/cd_history"
+      echo "$PWD" >> "$f"
+      tmp=$(cat "$f")
+      tmp=$(echo "$tmp" | uniq)
+      tmp=$(echo "$tmp" | tail -n10)
+      echo $tmp > "$f"
     fi
 }
 
