@@ -1,5 +1,25 @@
 #!/bin/bash
 
+cK='\033[0;30m' # Black
+cR='\033[0;31m' # Red
+cG='\033[0;32m' # Green
+cY='\033[0;33m' # Yellow
+cB='\033[0;34m' # Blue
+cP='\033[0;35m' # Purple
+cC='\033[0;36m' # Cyan
+cW='\033[0;37m' # White
+
+bK='\033[1;30m' # Black
+bR='\033[1;31m' # Red
+bG='\033[1;32m' # Green
+bY='\033[1;33m' # Yellow
+bB='\033[1;34m' # Blue
+bP='\033[1;35m' # Purple
+bC='\033[1;36m' # Cyan
+bW='\033[1;37m' # White
+
+c0='\033[0m' # Re
+
 setv() {
     VARS_FILE="$ST_USER_HOME/env"
 
@@ -97,12 +117,12 @@ cd() {
     builtin cd "$@" || return
 
     if [[ "$OLDPWD" != "$PWD" ]]; then
-      f="$ST_USER_HOME/cd_history"
-      echo "$PWD" >> "$f"
-      tmp=$(cat "$f")
-      tmp=$(echo "$tmp" | uniq)
-      tmp=$(echo "$tmp" | tail -n10)
-      echo $tmp > "$f"
+        local f="$ST_USER_HOME/cd_history"
+        mkdir -p "$(dirname "$f")"
+        touch "$f"
+
+        # Добавить текущую директорию в начало, убрать дубликаты
+        echo "$PWD" | cat - "$f" | awk '!seen[$0]++' | head -n10 > "$f.tmp" && mv "$f.tmp" "$f"
     fi
 }
 
@@ -111,7 +131,7 @@ get_raw_history() {
 }
 
 d() {
-  get_raw_history | tac | nl -v1 -nln -w1 -s' ' > $ST_USER_HOME/tmp_numbering
+  get_raw_history |  nl -v1 -nln -w1 -s' ' > $ST_USER_HOME/tmp_numbering
   cat $ST_USER_HOME/tmp_numbering
   rm -f $ST_USER_HOME/tmp_numbering
 }
@@ -121,7 +141,7 @@ st_go() {
 
   local index=$1
   local dir
-  dir=$(get_raw_history | tac | sed -n "${index}p")
+  dir=$(get_raw_history | sed -n "${index}p")
   [[ -n "$dir" ]] && cd "$dir" || return
 }
 

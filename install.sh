@@ -1,44 +1,66 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-shell_name=$(basename "$SHELL")
-script_dir=$(dirname "$(realpath "$0")")
+set -e
 
-init_lines="### Shell tools initialization ###
-export ST_HOME=$script_dir
+# Determine install directory
+ST_HOME="$(cd "$(dirname "$0")" && pwd)"
+
+# Init block to be inserted into rc files
+init_block="### Shell tools initialization ###
+export ST_HOME=\"$ST_HOME\"
 source \$ST_HOME/stinit.sh
 ##################################"
 
-case "$shell_name" in
-    bash)
-        rc_file="$HOME/.bashrc"
-        ;;
-    zsh)
-        rc_file="$HOME/.zshrc"
-        ;;
-    fish)
-        rc_file="$HOME/.config/fish/config.fish"
-        ;;
-    *)
-        rc_file="$HOME/.bash_profile"
-        ;;
-esac
+# Target RC files
+rc_files=(
+  "$HOME/.bashrc"
+  "$HOME/.zshrc"
+)
 
-sed -i '/### Shell tools initialization ###/,/##################################/d' "$rc_file"
+insert_block() {
+  local file="$1"
 
-echo "" >> "$rc_file"
-echo "$init_lines" >> "$rc_file"
+  # Create file if it doesn't exist
+  [ -f "$file" ] || touch "$file"
 
-version=$(cat $ST_HOME/doc/shelltools-version.txt)
+  # Remove any previous ShellTools init block
+  sed -i '/### Shell tools initialization ###/,/##################################/d' "$file"
 
+  # Append the new block
+  echo -e "\n$init_block" >> "$file"
+
+  echo "✅ Added initialization block to: $file"
+}
+
+echo "📦 Installing ShellTools..."
 echo
-echo "
+
+for file in "${rc_files[@]}"; do
+  insert_block "$file"
+done
+
+# Read version if available
+version_file="$ST_HOME/doc/shelltools-version.txt"
+if [[ -f "$version_file" ]]; then
+  version=$(<"$version_file")
+else
+  version="v0.x-dev"
+fi
+
+# Fancy ASCII banner
+cat <<EOF
+
  SSSSS   H   H  EEEEE  L      L     TTTTTTT  OOO   OOO  L      SSSSS
  S       H   H  E      L      L        T    O   O O   O L      S
  SSSSS   HHHHH  EEEE   L      L        T    O   O O   O L      SSSSS
      S   H   H  E      L      L        T    O   O O   O L          S
  SSSSS   H   H  EEEEE  LLLLL  LLLLL    T     OOO   OOO  LLLLL  SSSSS
-                                                                  $version
-"
-echo "ShellTools $version installed. Initialization lines added to $rc_file"
-echo "Please re-login to your shell for the changes to take effect."
+                                                             $version
+
+EOF
+
+echo "✅ Installation complete."
+echo "🔁 Please restart your terminal, or run:"
+echo "   source ~/.bashrc  # if using Bash"
+echo "   source ~/.zshrc   # if using Zsh"
 echo
