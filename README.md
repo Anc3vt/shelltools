@@ -1,7 +1,6 @@
 # 🐚 ShellTools
 
-A lightweight, modular toolkit to **supercharge your shell productivity**.  
-From enhanced navigation to fuzzy history search and batch command execution — ShellTools helps developers get more done in less keystrokes.
+A lightweight, modular toolkit to **improve shell productivity**.
 
 ---
 
@@ -13,6 +12,7 @@ No more exporting the same stuff every time you open a terminal.
 
 - `setv VAR=VALUE` — Save & export
 - `getv VAR` — Read it
+- `getv` - List all
 - `unsetv VAR` — Delete it
 
 ### 📁 Smart Directory Navigation
@@ -29,12 +29,6 @@ Search smarter, not harder.
 - `g pattern` — Grep recursively with color
 - `fvim name pattern` — Open files in Vim that match both filename and content
 
-### 🛆 Maven Helpers
-Because Java devs deserve nice things too.
-
-- `mvnver` — Show GroupId / ArtifactId / Version at a glance
-- `mvnless` — Clean Maven build output (no more log soup)
-
 ### 🧠 CLI Memory Boosters
 - `ff docker pull` — Fuzzy search and re-run past commands from history
 
@@ -49,6 +43,12 @@ Because Java devs deserve nice things too.
 ### 🌲 Tree View (no dependency!)
 - `tree` — Directory tree with pretty UTF-8 lines
 
+### 🛆 Maven Helpers
+Because Java devs deserve nice things too.
+
+- `mvnver` — Show GroupId / ArtifactId / Version at a glance
+- `mvnless` — Clean Maven build output (no more log soup)
+
 ---
 
 ## 🛠 Installation
@@ -59,21 +59,6 @@ cd shelltools
 ./install.sh
 source ~/.bashrc   # or ~/.zshrc
 ```
-
----
-
-## 📂 Directory Structure
-
-```
-shelltools/
-🔺── bin/             # CLI scripts (added to $PATH)
-🔺── lib/             # Core logic: args parser etc.
-🔺── functions        # Shell functions sourced at init
-🔺── stinit.sh        # ShellTools startup script
-🔺── install.sh       # Adds to .bashrc/.zshrc
-🔺── doc/             # Logo, version info
-```
-
 ---
 
 ## 🐧 Compatibility
@@ -97,11 +82,9 @@ d         # shows recent dirs
 2         # jump to second recent
 ff docker run
 ```
+## 🙋‍♂️ Why
 
----
+I originally built ShellTools for myself — to streamline my daily workflow in the terminal, reduce repetitive typing, and make Bash/Zsh feel more like a personal toolbelt than just a shell.
 
-## 📄 License
-
-Apache 2.0.  
-Created by [Ancevt](https://github.com/Anc3vt).  
-Use it, fork it, extend it — and maybe finally ditch those crusty `.bash_aliases` files.
+## Contributing 
+Pull requests, ideas, and issues are welcome.
