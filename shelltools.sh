@@ -1,5 +1,17 @@
 #!/bin/bash
 
+export ST_HOME=${ST_HOME:-~/shelltools}
+export ST_USER_HOME=${ST_USER_HOME:-~/.shelltools}
+mkdir -p $ST_HOME
+mkdir -p $ST_USER_HOME
+mkdir -p $ST_USER_HOME/bookmarks
+
+touch $ST_USER_HOME/env
+
+. $ST_USER_HOME/env
+
+export PATH=$PATH:$ST_HOME/bin/
+
 cK='\033[0;30m' # Black
 cR='\033[0;31m' # Red
 cG='\033[0;32m' # Green
@@ -105,26 +117,100 @@ mark() {
 # Перейти по метке
 jump() {
   local target="$ST_USER_HOME/bookmarks/$1"
-  [[ -f "$target" ]] && cd "$(cat "$target")" || echo "Метки '$1' не найдено"
+  [[ -f "$target" ]] && cd "$(cat "$target")" || echo "Mark '$1' not found"
 }
 
 # Посмотреть все метки
 marks() {
-  ls "$ST_USER_HOME/bookmarks"
+  cd "$ST_USER_HOME/bookmarks"
+  grep -r .
 }
+
+export CDHISTORYDIR=$ST_USER_HOME
+
+G() {
+  local dir
+  [[ -f "$CDHISTORYDIR/cd_history_long" ]] || return
+
+  tac "$ST_USER_HOME/cd_history_long" | awk '!seen[$0]++' | tac > "$ST_USER_HOME/cd_history_long.tmp" \
+      && mv "$ST_USER_HOME/cd_history_long.tmp" "$ST_USER_HOME/cd_history_long"
+
+  export CDH_NOLOG=1
+
+  # Форматируем вывод для fzf с улучшенной подсветкой
+  local formatted
+  formatted=$(awk -v home="$HOME" '
+    {
+      original = $0;
+      gsub(home, "~");  # заменяем $HOME на ~
+
+      if (original ~ "^/mnt/c/") {
+        # Windows paths - голубой
+        sub("^/mnt/c/", "\033[36m/mnt/c/\033[0m");
+      } else if (original ~ "^/home/" && original != home "/") {
+        # Другие home директории - зеленый
+        sub("^~?/home/[^/]+/", "\033[32m&\033[0m");
+      } else if (original ~ "^/opt/") {
+        # System software - желтый
+        sub("^/opt/", "\033[33m/opt/\033[0m");
+      } else if (original ~ "^/var/") {
+        # Variable data - magenta
+        sub("^/var/", "\033[35m/var/\033[0m");
+      } else if (original ~ "^/tmp/") {
+        # Temp files - яркий magenta
+        sub("^/tmp/", "\033[95m/tmp/\033[0m");
+      } else if (original ~ "^/etc/") {
+        # Config files - яркий cyan
+        sub("^/etc/", "\033[96m/etc/\033[0m");
+      } else if (original ~ "^/usr/") {
+        # User programs - bright blue
+        sub("^/usr/", "\033[94m/usr/\033[0m");
+      }
+
+      print $0;
+    }' "$CDHISTORYDIR/cd_history_long")
+
+  # Показываем через fzf с цветами
+  dir=$(echo -e "$formatted" | fzf \
+    --ansi \
+    --height=50% \
+    --reverse \
+    --cycle \
+    --no-clear \
+    --preview 'ls -A --color=auto {}' \
+    --preview-window=right:20%:wrap:cycle)
+
+  if [[ -n "$dir" ]]; then
+    dir="${dir/#\~/$HOME}"
+    cd "$dir"
+  fi
+
+  unset CDH_NOLOG
+}
+
+
 
 cd() {
-    builtin cd "$@" || return
+  builtin cd "$@" || return
+  [[ "$OLDPWD" == "$PWD" ]] && return
+  [[ -n "$CDH_NOLOG" ]] && return
 
-    if [[ "$OLDPWD" != "$PWD" ]]; then
-        local f="$ST_USER_HOME/cd_history"
-        mkdir -p "$(dirname "$f")"
-        touch "$f"
+  local dir_file="$CDHISTORYDIR/cd_history"
+  local long_file="$CDHISTORYDIR/cd_history_long"
 
-        # Добавить текущую директорию в начало, убрать дубликаты
-        echo "$PWD" | cat - "$f" | awk '!seen[$0]++' | head -n10 > "$f.tmp" && mv "$f.tmp" "$f"
-    fi
+  mkdir -p "$(dirname "$dir_file")"
+  touch "$dir_file" "$long_file"
+
+  { echo "$PWD"; cat "$dir_file"; } | awk '!seen[$0]++' | head -n10 > "$dir_file.tmp" && mv "$dir_file.tmp" "$dir_file"
+
+  awk -v new="$PWD" -v max=1000 '
+    BEGIN { print new; seen[new]=1 }
+    !seen[$0]++ { print $0 }
+    NR<max
+  ' "$long_file" > "$long_file.tmp" && mv "$long_file.tmp" "$long_file"
 }
+
+
 
 get_raw_history() {
   tail "$ST_USER_HOME/cd_history" -n9 | head -n8
@@ -188,4 +274,3 @@ fdate() {
   date +"%Y-%m-%d_%H-%M-%S"
 }
 
-. $ST_HOME/lib/args.sh

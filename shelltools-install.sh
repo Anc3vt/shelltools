@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+version="1.0"
+
 set -e
 
 # Determine install directory
@@ -8,7 +10,7 @@ ST_HOME="$(cd "$(dirname "$0")" && pwd)"
 # Init block to be inserted into rc files
 init_block="### Shell tools initialization ###
 export ST_HOME=\"$ST_HOME\"
-source \$ST_HOME/stinit.sh
+source \$ST_HOME/shelltools.sh
 ##################################"
 
 # Target RC files
@@ -27,25 +29,17 @@ insert_block() {
   sed -i '/### Shell tools initialization ###/,/##################################/d' "$file"
 
   # Append the new block
-  echo -e "\n$init_block" >> "$file"
+  echo -e "$init_block" >> "$file"
 
-  echo "✅ Added initialization block to: $file"
+  echo "Added initialization block to: $file"
 }
 
-echo "📦 Installing ShellTools..."
+echo "Installing ShellTools..."
 echo
 
 for file in "${rc_files[@]}"; do
   insert_block "$file"
 done
-
-# Read version if available
-version_file="$ST_HOME/doc/shelltools-version.txt"
-if [[ -f "$version_file" ]]; then
-  version=$(<"$version_file")
-else
-  version="v0.x-dev"
-fi
 
 # Fancy ASCII banner
 cat <<EOF
@@ -59,8 +53,8 @@ cat <<EOF
 
 EOF
 
-echo "✅ Installation complete."
-echo "🔁 Please restart your terminal, or run:"
+echo "Installation complete."
+echo "Please restart your terminal, or run:"
 echo "   source ~/.bashrc  # if using Bash"
 echo "   source ~/.zshrc   # if using Zsh"
 echo
