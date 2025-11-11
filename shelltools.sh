@@ -12,6 +12,8 @@ touch $ST_USER_HOME/env
 
 export PATH=$PATH:$ST_HOME/bin/
 
+##### COLORS #####
+
 cK='\033[0;30m' # Black
 cR='\033[0;31m' # Red
 cG='\033[0;32m' # Green
@@ -31,6 +33,20 @@ bC='\033[1;36m' # Cyan
 bW='\033[1;37m' # White
 
 c0='\033[0m' # Re
+
+#### PREPARE ####
+
+unalias 1 &>/dev/null
+unalias 2 &>/dev/null
+unalias 3 &>/dev/null
+unalias 4 &>/dev/null
+unalias 5 &>/dev/null
+unalias 6 &>/dev/null
+unalias 7 &>/dev/null
+unalias 8 &>/dev/null
+unalias d &>/dev/null
+
+#### FUNCTIONS ####
 
 setv() {
     VARS_FILE="$ST_USER_HOME/env"
@@ -109,18 +125,15 @@ complete -F _setv_complete_vars setv
 
 ###########
 
-# Добавить текущую папку как метку
 mark() {
   echo "$PWD" > "$ST_USER_HOME/bookmarks/$1"
 }
 
-# Перейти по метке
 jump() {
   local target="$ST_USER_HOME/bookmarks/$1"
   [[ -f "$target" ]] && cd "$(cat "$target")" || echo "Mark '$1' not found"
 }
 
-# Посмотреть все метки
 marks() {
   cd "$ST_USER_HOME/bookmarks"
   grep -r .
@@ -170,7 +183,6 @@ G() {
       print $0;
     }' "$CDHISTORYDIR/cd_history_long")
 
-  # Показываем через fzf с цветами
   dir=$(echo -e "$formatted" | fzf \
     --ansi \
     --height=50% \
