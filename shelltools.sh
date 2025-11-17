@@ -129,6 +129,26 @@ mark() {
   echo "$PWD" > "$ST_USER_HOME/bookmarks/$1"
 }
 
+deletemark() {
+  local target="$ST_USER_HOME/bookmarks/$1"
+  local name="$1"
+
+  if [[ -z "$name" ]]; then
+    echo "Usage: deletemark <markname>"
+    return 1
+  fi
+
+  if [[ -f "$target" ]]; then
+    rm -f "$target"
+    echo "Deleted mark '$name'"
+  else
+    echo "Mark '$name' not found"
+    return 1
+  fi
+}
+
+
+
 jump() {
   local target="$ST_USER_HOME/bookmarks/$1"
   [[ -f "$target" ]] && cd "$(cat "$target")" || echo "Mark '$1' not found"
@@ -138,6 +158,28 @@ marks() {
   cd "$ST_USER_HOME/bookmarks"
   grep -r .
 }
+
+J() {
+    local dir bookmarks selected
+    bookmarks="$ST_USER_HOME/bookmarks"
+
+    # если нет закладок — выход
+    [[ -d "$bookmarks" ]] || { echo "No bookmarks"; return 1; }
+
+    # формируем список "name → path"
+    selected=$(ls "$bookmarks" 2>/dev/null | while read -r name; do
+        [[ -f "$bookmarks/$name" ]] && echo "$name → $(cat "$bookmarks/$name")"
+    done | fzf --ansi --height=40% --reverse --prompt="Bookmarks > ")
+
+    [[ -z "$selected" ]] && return 1  # ESC or empty
+
+    # выделяем имя закладки (левую часть до " → ")
+    local name="${selected%% →*}"
+    local target="$bookmarks/$name"
+
+    [[ -f "$target" ]] && cd "$(cat "$target")"
+}
+
 
 export CDHISTORYDIR=$ST_USER_HOME
 
@@ -284,5 +326,20 @@ mvnless() {
 
 fdate() {
   date +"%Y-%m-%d_%H-%M-%S"
+}
+
+cdw() {
+    local win="$1"
+
+    win="${win//\\//}"
+    local drive="${win%%:*}"
+    drive="${drive:l}"   # lower-case
+    local rest="${win#*:}"
+    local linux="/mnt/$drive$rest"
+
+    cd "$linux" || {
+        echo "Unable to cd to $linux"
+        return 1
+    }
 }
 
