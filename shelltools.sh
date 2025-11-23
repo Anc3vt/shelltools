@@ -2,6 +2,11 @@
 
 export ST_HOME=${ST_HOME:-~/shelltools}
 export ST_USER_HOME=${ST_USER_HOME:-~/.shelltools}
+
+export OPENHIST_FILE="$ST_USER_HOME/edit_history"
+mkdir -p "$ST_USER_HOME"
+touch "$OPENHIST_FILE"
+
 mkdir -p $ST_HOME
 mkdir -p $ST_USER_HOME
 mkdir -p $ST_USER_HOME/bookmarks
@@ -9,6 +14,9 @@ mkdir -p $ST_USER_HOME/bookmarks
 touch $ST_USER_HOME/env
 
 . $ST_USER_HOME/env
+
+
+export CDHISTORYDIR=$ST_USER_HOME
 
 export PATH=$PATH:$ST_HOME/bin/
 
@@ -47,6 +55,76 @@ unalias 8 &>/dev/null
 unalias d &>/dev/null
 
 #### FUNCTIONS ####
+_trackopen() {
+    local editor="$1"
+    shift
+
+    # если нет аргументов — запускаем редактор как есть
+    if [[ $# -eq 0 ]]; then
+        command "$editor"
+        return
+    fi
+
+    {
+        # новые файлы
+        for arg in "$@"; do
+            if [[ -f "$arg" ]]; then
+                abs_path="$(realpath "$arg")"
+            else
+                abs_path="$(realpath "$arg" 2>/dev/null || echo "$PWD/$arg")"
+            fi
+
+            echo "$abs_path"
+        done
+
+        # старая история
+        cat "$OPENHIST_FILE"
+
+    } | awk '!seen[$0]++' > "$OPENHIST_FILE.tmp" \
+      && mv "$OPENHIST_FILE.tmp" "$OPENHIST_FILE"
+
+    # вызываем настоящий редактор
+    command "$editor" "$@"
+}
+
+
+
+trackcmd() {
+    local cmd="$1"
+
+    eval "
+$cmd() {
+    _trackopen \"$cmd\" \"\$@\"
+}
+"
+}
+
+recent_dirs_prompt() {
+    local parts=()
+    local i=1
+    local dir=""
+    local name=""
+    local short=""
+
+    while read -r dir; do
+        [[ -z "$dir" ]] && continue
+        name="${dir##*/}"
+
+        # обрезка
+        short="${name:0:20}"
+
+        parts+=("$i:$short")
+        ((i++))
+    done < <(get_recent_dirs)
+
+    # склей без лишних пробелов
+    [[ ${#parts[@]} -gt 0 ]] && echo "${(j: :)parts}"
+}
+
+
+get_recent_dirs() {
+    tail -n +2 "$ST_USER_HOME/cd_history" | head -n8
+}
 
 setv() {
     VARS_FILE="$ST_USER_HOME/env"
@@ -150,6 +228,10 @@ deletemark() {
 
 
 jump() {
+  [[ -z $1 ]] && {
+    J
+    return
+  }
   local target="$ST_USER_HOME/bookmarks/$1"
   [[ -f "$target" ]] && cd "$(cat "$target")" || echo "Mark '$1' not found"
 }
@@ -163,25 +245,48 @@ J() {
     local dir bookmarks selected
     bookmarks="$ST_USER_HOME/bookmarks"
 
-    # если нет закладок — выход
     [[ -d "$bookmarks" ]] || { echo "No bookmarks"; return 1; }
 
-    # формируем список "name → path"
     selected=$(ls "$bookmarks" 2>/dev/null | while read -r name; do
         [[ -f "$bookmarks/$name" ]] && echo "$name → $(cat "$bookmarks/$name")"
     done | fzf --ansi --height=40% --reverse --prompt="Bookmarks > ")
 
     [[ -z "$selected" ]] && return 1  # ESC or empty
 
-    # выделяем имя закладки (левую часть до " → ")
     local name="${selected%% →*}"
     local target="$bookmarks/$name"
 
     [[ -f "$target" ]] && cd "$(cat "$target")"
 }
 
+E() {
+    [[ ! -f "$OPENHIST_FILE" ]] && { echo "No open history yet"; return 1; }
 
-export CDHISTORYDIR=$ST_USER_HOME
+    local file
+    file=$(tac "$OPENHIST_FILE" | fzf --height=40% --reverse --prompt="Edit > ")
+
+    [[ -z "$file" ]] && return
+
+    ${EDITOR:-vim} "$file"
+}
+
+O() {
+    [[ ! -f "$OPENHIST_FILE" ]] && { echo "No open history yet"; return 1; }
+
+    local file editor
+
+    file=$(tac "$OPENHIST_FILE" | fzf --height=40% --reverse --prompt="Open > ")
+    [[ -z "$file" ]] && return
+
+    editor=$(printf "vim\nidea\nnp++\nnano\n\n${EDITOR:-vim}" \
+        | awk '!seen[$0]++' \
+        | fzf --height=30% --reverse --prompt="Editor > ")
+
+    [[ -z "$editor" ]] && return
+
+    $editor "$file"
+}
+
 
 G() {
   local dir
@@ -271,18 +376,20 @@ get_raw_history() {
 }
 
 d() {
-  get_raw_history |  nl -v1 -nln -w1 -s' ' > $ST_USER_HOME/tmp_numbering
-  cat $ST_USER_HOME/tmp_numbering
-  rm -f $ST_USER_HOME/tmp_numbering
+    get_recent_dirs | nl -v1 -nln -w1 -s' '
 }
 
-st_go() {
-  touch "$ST_USER_HOME/cd_history"
 
-  local index=$1
-  local dir
-  dir=$(get_raw_history | sed -n "${index}p")
-  [[ -n "$dir" ]] && cd "$dir" || return
+st_go() {
+    local index=$1
+    local dir
+
+    dir=$(get_recent_dirs | sed -n "${index}p")
+
+    [[ -n "$dir" ]] && cd "$dir" || {
+        echo "No such entry"
+        return 1
+    }
 }
 
 1() { st_go 1; }
@@ -320,10 +427,6 @@ mvnver() {
   head pom.xml -n$N | grep --color -E "groupId|<version|artifactId"
 }
 
-mvnless() {
-  mvn clean install | grep -E --color "(SUCCESS|FAILURE|Building)"
-}
-
 fdate() {
   date +"%Y-%m-%d_%H-%M-%S"
 }
@@ -343,3 +446,19 @@ cdw() {
     }
 }
 
+
+
+
+trackcmd vim
+trackcmd idea
+trackcmd edit
+trackcmd nano
+
+bindkey -s '^E' 'E\n'
+bindkey -s '^O' 'O\n'
+bindkey -s '^B' 'J\n'
+bindkey -s '^G' 'G\n'
+
+
+
+getv
