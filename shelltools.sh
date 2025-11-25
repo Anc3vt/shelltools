@@ -446,9 +446,6 @@ cdw() {
     }
 }
 
-
-
-
 trackcmd vim
 trackcmd idea
 trackcmd edit
@@ -459,6 +456,53 @@ bindkey -s '^O' 'O\n'
 bindkey -s '^B' 'J\n'
 bindkey -s '^G' 'G\n'
 
+#-------------------------
 
+setopt AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
+setopt PROMPT_SUBST
+
+bookmarks_prompt() {
+    local dir="${ST_USER_HOME:-$HOME}/bookmarks"    # fallback на ~/bookmars если переменная ещё не загружена
+
+    if [[ ! -d "$dir" ]]; then
+        echo -n "%F{magenta}(markslist)%f "
+        return
+    fi
+
+    local list=$(ls -1A "$dir" 2>/dev/null | tr '\n' ' ' | sed 's/ $//')
+
+    if [[ -z "$list" ]]; then
+        echo -n "%F{magenta}(markslist)%f "
+    else
+        echo -n "%F{magenta}($list)%f "
+    fi
+}
+
+git_prompt_info() {
+    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        local branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
+        if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+            echo "%F{red}$branch%f"
+        else
+            echo "%F{green}$branch%f"
+        fi
+    fi
+}
+
+if [[ -n "$RANGER_LEVEL" ]]; then
+    PROMPT='%F{yellow}ranger[$RANGER_LEVEL]%f %F{cyan}%~%f $(git_prompt_info) $(bookmarks_prompt)%F{blue}$(recent_dirs_prompt)
+%F{white}→ %f'
+else
+    PROMPT='%F{cyan}%~%f $(git_prompt_info) $(bookmarks_prompt)%F{blue}$(recent_dirs_prompt)
+%F{white}→ %f'
+fi
+
+setopt PROMPT_SUBST
+
+ZSH_AUTOSUGGEST_MANUAL_REBIND=1
+ZSH_AUTOSUGGEST_USE_ASYNC=1
+ZSH_AUTOSUGGEST_STRATEGY=(match_prev_cmd history completion)
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=100
+#-----------------------
 
 getv
